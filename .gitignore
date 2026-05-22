@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.env
+
+# Alembic
+backend/alembic/versions/*.py
+
+# Node
+node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/dist/
+
+# Uploads
+backend/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
