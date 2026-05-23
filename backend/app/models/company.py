@@ -1,10 +1,11 @@
 import enum
 from datetime import datetime
-from sqlalchemy import String, Text, Integer, DateTime, Enum, ARRAY
+from sqlalchemy import String, Text, Integer, DateTime, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
 from app.database import Base
+from app.models.types import StringArray
 
 
 class CompanyStatus(str, enum.Enum):
@@ -35,7 +36,7 @@ class Company(Base):
     contact_email: Mapped[str | None] = mapped_column(String(255))
     phone: Mapped[str | None] = mapped_column(String(50))
     address: Mapped[str | None] = mapped_column(String(500))
-    image_urls: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    image_urls: Mapped[list[str] | None] = mapped_column(StringArray)
     instagram_url: Mapped[str | None] = mapped_column(String(500))
     linkedin_url: Mapped[str | None] = mapped_column(String(500))
     rejection_reason: Mapped[str | None] = mapped_column(Text)
