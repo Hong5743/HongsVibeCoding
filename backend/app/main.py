@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from app.api.auth import router as auth_router
+from app.api.company import router as company_router
 
 app = FastAPI(title="Company Discovery Platform API", version="0.1.0")
 
@@ -20,6 +21,7 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(company_router, prefix="/api")
 
 
 @app.get("/health")
