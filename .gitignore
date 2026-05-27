@@ -21,3 +21,9 @@ backend/uploads/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local dev DB
+backend/dev.db
+
+# Claude local settings
+.claude/settings.local.json

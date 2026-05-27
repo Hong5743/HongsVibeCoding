@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -7,8 +9,19 @@ from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.company import router as company_router
 from app.api.public import router as public_router
+from app.database import Base, engine
 
-app = FastAPI(title="Company Discovery Platform API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # create tables for SQLite dev environment (Alembic handles PostgreSQL)
+    if "sqlite" in str(engine.url):
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    yield
+
+
+app = FastAPI(title="Company Discovery Platform API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
