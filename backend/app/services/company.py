@@ -11,6 +11,38 @@ ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
+def public_company_card_dict(company: Company) -> dict:
+    return {
+        "id": company.id,
+        "name": company.name,
+        "logo_url": company.logo_url,
+        "description": company.description,
+        "industry": company.industry,
+        "company_size": company.company_size,
+        "address": company.address,
+    }
+
+
+def public_company_detail_dict(company: Company) -> dict:
+    return {
+        "id": company.id,
+        "name": company.name,
+        "logo_url": company.logo_url,
+        "description": company.description,
+        "industry": company.industry,
+        "founded_year": company.founded_year,
+        "employee_count": company.employee_count,
+        "company_size": company.company_size,
+        "website": company.website,
+        "contact_email": company.contact_email,
+        "phone": company.phone,
+        "address": company.address,
+        "image_urls": company.image_urls,
+        "instagram_url": company.instagram_url,
+        "linkedin_url": company.linkedin_url,
+    }
+
+
 def company_to_dict(company: Company) -> dict:
     return {
         "id": company.id,
