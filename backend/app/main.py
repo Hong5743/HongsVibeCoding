@@ -7,6 +7,7 @@ import os
 
 from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 from app.api.company import router as company_router
 from app.api.public import router as public_router
 from app.database import Base, engine
@@ -39,6 +40,7 @@ app.include_router(auth_router, prefix="/api")
 app.include_router(company_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(public_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 
 
 @app.get("/health")
