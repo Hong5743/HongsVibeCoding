@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +16,25 @@ def ok(data=None) -> dict:
 
 
 @router.get("/companies")
-async def list_public_companies(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Company).where(Company.status == CompanyStatus.approved)
-    )
+async def list_public_companies(
+    db: AsyncSession = Depends(get_db),
+    q: Optional[str] = Query(None, description="기업명 또는 소개 키워드 검색"),
+    industry: Optional[str] = Query(None, description="업종 필터"),
+    region: Optional[str] = Query(None, description="지역(주소) 필터"),
+):
+    stmt = select(Company).where(Company.status == CompanyStatus.approved)
+
+    if q:
+        like = f"%{q}%"
+        stmt = stmt.where(
+            (Company.name.ilike(like)) | (Company.description.ilike(like))
+        )
+    if industry:
+        stmt = stmt.where(Company.industry.ilike(f"%{industry}%"))
+    if region:
+        stmt = stmt.where(Company.address.ilike(f"%{region}%"))
+
+    result = await db.execute(stmt)
     companies = list(result.scalars().all())
     return ok([public_company_card_dict(c) for c in companies])
 

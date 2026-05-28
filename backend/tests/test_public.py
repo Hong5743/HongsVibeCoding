@@ -170,3 +170,118 @@ async def test_get_public_company_rejected_returns_404(client: AsyncClient, db: 
     company = await _make_rejected_company(db)
     res = await client.get(f"{BASE}/companies/{company.id}")
     assert res.status_code == 404
+
+
+# ── GET /api/public/companies?q= (keyword search) ────────────────────────────
+
+@pytest.mark.asyncio
+async def test_search_by_name_keyword(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "a1@test.com", "Alpha Corp")
+    await _make_approved_company(db, "a2@test.com", "Beta Inc")
+    res = await client.get(f"{BASE}/companies?q=alpha")
+    data = res.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "Alpha Corp"
+
+
+@pytest.mark.asyncio
+async def test_search_by_description_keyword(client: AsyncClient, db: AsyncSession):
+    company = Company(
+        email="desc@test.com",
+        password_hash="hashed",
+        is_verified=True,
+        status=CompanyStatus.approved,
+        name="DescCo",
+        description="We build amazing software solutions",
+    )
+    db.add(company)
+    await db.commit()
+
+    res = await client.get(f"{BASE}/companies?q=amazing+software")
+    data = res.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "DescCo"
+
+
+@pytest.mark.asyncio
+async def test_search_returns_empty_when_no_match(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db)
+    res = await client.get(f"{BASE}/companies?q=nonexistentkeyword12345")
+    assert res.json()["data"] == []
+
+
+@pytest.mark.asyncio
+async def test_search_is_case_insensitive(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "case@test.com", "Seoul Technology")
+    res = await client.get(f"{BASE}/companies?q=SEOUL")
+    assert len(res.json()["data"]) == 1
+
+
+# ── GET /api/public/companies?industry= (industry filter) ────────────────────
+
+@pytest.mark.asyncio
+async def test_filter_by_industry(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "it@test.com", "IT Corp", industry="IT")
+    await _make_approved_company(db, "fin@test.com", "Fin Corp", industry="Finance")
+    res = await client.get(f"{BASE}/companies?industry=IT")
+    data = res.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "IT Corp"
+
+
+@pytest.mark.asyncio
+async def test_filter_by_industry_case_insensitive(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "it2@test.com", "Tech Co", industry="Technology")
+    res = await client.get(f"{BASE}/companies?industry=technology")
+    assert len(res.json()["data"]) == 1
+
+
+# ── GET /api/public/companies?region= (region filter) ────────────────────────
+
+@pytest.mark.asyncio
+async def test_filter_by_region(client: AsyncClient, db: AsyncSession):
+    seoul = Company(
+        email="seoul@test.com",
+        password_hash="hashed",
+        is_verified=True,
+        status=CompanyStatus.approved,
+        name="Seoul Corp",
+        address="서울시 강남구",
+    )
+    busan = Company(
+        email="busan@test.com",
+        password_hash="hashed",
+        is_verified=True,
+        status=CompanyStatus.approved,
+        name="Busan Corp",
+        address="부산시 해운대구",
+    )
+    db.add_all([seoul, busan])
+    await db.commit()
+
+    res = await client.get(f"{BASE}/companies?region=서울")
+    data = res.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "Seoul Corp"
+
+
+# ── Combined filters ──────────────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_combined_q_and_industry_filter(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "c1@test.com", "Seoul IT", industry="IT")
+    await _make_approved_company(db, "c2@test.com", "Seoul Finance", industry="Finance")
+    await _make_approved_company(db, "c3@test.com", "Busan IT", industry="IT")
+
+    res = await client.get(f"{BASE}/companies?q=Seoul&industry=IT")
+    data = res.json()["data"]
+    assert len(data) == 1
+    assert data[0]["name"] == "Seoul IT"
+
+
+@pytest.mark.asyncio
+async def test_no_filter_returns_all_approved(client: AsyncClient, db: AsyncSession):
+    await _make_approved_company(db, "x1@test.com", "Corp A")
+    await _make_approved_company(db, "x2@test.com", "Corp B")
+    res = await client.get(f"{BASE}/companies")
+    assert len(res.json()["data"]) == 2

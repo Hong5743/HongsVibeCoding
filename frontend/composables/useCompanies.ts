@@ -26,6 +26,12 @@ export interface CompanyDetail {
   linkedin_url: string | null;
 }
 
+export interface CompanySearchParams {
+  q?: string;
+  industry?: string;
+  region?: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -36,9 +42,15 @@ export function useCompanies() {
   const config = useRuntimeConfig();
   const base = config.public.apiBase;
 
-  async function fetchCompanies(): Promise<CompanyCard[]> {
+  async function fetchCompanies(params?: CompanySearchParams): Promise<CompanyCard[]> {
+    const query: Record<string, string> = {};
+    if (params?.q) query.q = params.q;
+    if (params?.industry) query.industry = params.industry;
+    if (params?.region) query.region = params.region;
+
     const res = await $fetch<ApiResponse<CompanyCard[]>>(
-      `${base}/api/public/companies`
+      `${base}/api/public/companies`,
+      { query }
     );
     return res.data;
   }
