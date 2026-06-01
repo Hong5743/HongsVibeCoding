@@ -153,10 +153,6 @@ backend-dev  →  issue{N}_api_contract.md  →  frontend-dev
 
 재시작해도 `_workspace/` 파일 존재 여부로 진행 단계 자동 감지 → 완료된 단계 스킵.
 
-### `grill-me` / `grill-with-docs` 스킬
-
-PRD 작성 및 기술 결정 단계에서 사용. 작성한 설계 문서를 시니어 엔지니어 관점에서 비판적으로 검토 → 약점 발견 → PRD 보완.
-
 ---
 
 ## 개발 방법론
