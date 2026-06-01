@@ -1,8 +1,7 @@
 # Company Discovery Platform — 기업 소개 플랫폼
 
-기업이 직접 프로필을 등록하고, 방문자가 AI 챗봇으로 자연어 검색할 수 있는 웹 플랫폼.
-
-**Live Demo:** `http://localhost:3000` (로컬 실행 기준)
+## 한줄 소개:
+다양한 직군의 기업이 자신들을 소개하는 글을 등록하고, 방문자가 이를 보고 서로 거레처가 되는 바이브 코딩 웹 플랫폼. 
 
 ---
 
@@ -91,16 +90,16 @@
 
 ## Claude Code 멀티 에이전트 개발 파이프라인
 
-이 프로젝트는 **Claude Code**의 커스텀 스킬과 서브 에이전트를 활용해 이슈 단위로 자동 개발되었다.
+이 프로젝트는 **Claude Code**의 스킬과 서브 에이전트를 활용해 이슈 단위로 자동 개발되었다.
+
+### 서브 에이전트
+
 
 ### `issue-dev` 스킬 — 오케스트레이터
 
 GitHub 이슈 번호를 입력하면 분석 → 백엔드 → 프론트엔드 → 코드 리뷰 → 커밋까지 파이프라인을 자동 실행.
 
 ```
-"이슈 #8 진행해줘"
-    │
-    ▼
 Phase 0: 컨텍스트 확인 (_workspace/ 캐시 체크)
     │
     ▼
@@ -126,11 +125,21 @@ Phase 5: git commit "feat: #{N} ..."
 
 ### 서브 에이전트 역할 분담
 
-| 에이전트 | 모델 | 역할 | 사용 시점 |
-|----------|------|------|-----------|
-| `backend-dev` | Claude Opus | FastAPI 엔드포인트 TDD 구현. `tests/` 먼저 작성(RED), 구현(GREEN), `pytest -v` 전체 통과 확인 후 `api_contract.md` 저장 | Phase 2 — 매 이슈 백엔드 구현 |
-| `frontend-dev` | Claude Opus | `api_contract.md`를 입력받아 Nuxt.js 페이지·composable 구현. 로딩/에러/빈 상태 3종 처리 필수 | Phase 3 — 백엔드 완료 후 |
-| `code-reviewer` | Claude Opus | `git diff`로 변경 파일 확인 → CRITICAL/HIGH/MEDIUM/LOW 심각도 보고 → APPROVED/WARN/BLOCKED 판정. 코드 직접 수정 안 함 | Phase 4 — 프론트엔드 완료 후 |
+**1. 기획 에이전트**
+a) 시스템 설계
+- mattpocock의 grill-me 스킬을 사용하여 시스템의 구조를 파악한다.
+- mattpocock의 to-prd 스킬을 사용하여 파악된 시스템 구조를 토대로 요구사항을 문서로 남긴다.
+b) 깃 허브 등록
+- mattpocock의 to-issues 스킬을 사용하여 요구사항을 구현 기능 단위로 쪼개고 깃 허브 이슈로 등록한다.
+ 
+**2. 개발 에이전트**
+a) 하네스
+- 카카오 개발자 revfactory의 하네스 에이전트를 사용하여 자동적으로 프로젝트의 하네스를 구축한다.
+b) 개발
+- 개발은 사용할 언어의 LSP를 사용하여 밀도 높은 코드로 작성한다.
+- 기능 구현 시 mattpocock의 hand-off 스킬을 사용하여 인수인계 문서 작성. 새로운 세션에서 작업 시 자동으로 이를 읽는다.
+c) 코드 개선
+- mattpocock의 improve-codebase-architacture 스킬을 사용하여 코드를 리팩토링 한다.
 
 ### 에이전트 간 데이터 전달
 
@@ -158,57 +167,3 @@ PRD 작성 및 기술 결정 단계에서 사용. 작성한 설계 문서를 시
 - **이미지 서빙** — UUID 파일명 + FastAPI StaticFiles. 추후 S3/Cloudinary 교체 시 URL만 변경.
 
 ---
-
-## 로컬 실행
-
-### 사전 요구사항
-
-- Docker Desktop
-- Python 3.11+
-- Node.js 20+
-- Ollama (`ollama pull llama3.1:8b`)
-
-### 1. DB
-
-```bash
-docker-compose up -d
-```
-
-### 2. 백엔드
-
-```bash
-cd backend
-python -m venv venv
-venv\Scripts\activate        # Windows
-pip install -r requirements.txt
-cp .env.example .env
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-API: http://localhost:8000  
-Docs: http://localhost:8000/docs
-
-### 3. 프론트엔드
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-App: http://localhost:3000
-
-### 4. AI 챗봇
-
-```bash
-ollama serve
-ollama pull llama3.1:8b
-```
-
-### 5. 테스트 실행
-
-```bash
-cd backend
-pytest tests/ -v
-```
